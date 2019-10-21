@@ -42,6 +42,8 @@ public class QuadraticProbingHashTable<AnyType>
      */
     public boolean insert( AnyType x )
     {
+        // @todo - this method will need to be changed - key will stay the same but the value will be an object (WordInfo)
+
         // Insert x as active
         int currentPos = findPos( x );
         if( isActive( currentPos ) )
