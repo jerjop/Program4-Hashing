@@ -38,30 +38,35 @@ public class Reviews {
             System.out.println("Number of Reviews " +  line_count);
     }
 
-    public void learnFromFile() throws FileNotFoundException {
-        File file = new File("movieReviews.txt");
-        Scanner sc = new Scanner(file);
+    public void learnFromFile(String filename) throws FileNotFoundException, IOException {
+        BufferedReader in = new BufferedReader(new FileReader(filename));
+        String line;
+        String[] words = null;
 
-        boolean isNew = true;
-        int rating = 0;
+        int score = -1;
+        int line_count = 0;
+        while ((line = in.readLine()) != null) {
+            line_count++;
+            words = line.split("\\s+");
+            try {
+                score = Integer.parseInt(words[0]);
+            } catch (NumberFormatException e) {
+                throw new NumberFormatException("Expected integer at line " + line_count + " in file " + filename);
+            }
 
-        while (sc.hasNext()) {
-            String word = sc.next().toLowerCase();
-            if (isNew) {
-                rating = Integer.parseInt(word);
-                isNew = false;
-            } else {
-                if (!word.equals(".")) {
-                    if (Character.isLetter(word.charAt(0))) {
-                        WordInfo info = new WordInfo(word);
-                        if(!H.contains(info)) {
-                            H.insert(info);
-                        } else {
-                            info.update(rating);
-                        }
-                    }
+            for (String word : words) {
+                WordInfo info = H.findKey(word);
+                if (info == null) {
+                    H.insert(word.toLowerCase(), new WordInfo(word));
                 } else {
-                    isNew = true;
+                    double occurrences = info.numberOfOccurences;
+                    double reviews = line_count;
+                    double averageUsage = reviews / occurrences;
+                    if (averageUsage > .1) {
+                        H.remove(info);
+                    } else {
+                        info.update(score);
+                    }
                 }
             }
         }
@@ -69,7 +74,6 @@ public class Reviews {
 
     public void handleUserReviewInfo() {
         double sum = 0.0d;
-        int count = 0;
         double average = 0.0d;
 
         Scanner sc = new Scanner(System.in);
@@ -77,16 +81,11 @@ public class Reviews {
 
         while (sc.hasNext()) {
             String input = sc.next().toLowerCase();
-            if(!input.equals(".")) {
-                WordInfo info = new WordInfo(input);
-                WordInfo entry = H.find(info);
-                if(entry != null) {
-                    sum += entry.totalScore;
-                    count++;
-                    average = entry.getAverage();
-                }
-            } else {
-                break;
+            WordInfo info = new WordInfo(input);
+            WordInfo entry = H.find(info);
+            if (entry != null) {
+                sum += entry.totalScore;
+                average = entry.getAverage();
             }
         }
 
@@ -163,8 +162,10 @@ public class Reviews {
 
             try {
                 Reviews r1 = new Reviews();
-                r1.learnFromFile();
-                r1.handleUserReviewInfo();
+                r1.learnFromFile("movieReviewsShort.txt");
+
+                System.out.println("done again");
+//                r1.handleUserReviewInfo();
             } catch (IOException e) {
                 e.printStackTrace();
             }

@@ -59,6 +59,29 @@ public class QuadraticProbingHashTable<AnyType>
         return true;
     }
 
+    /**
+     * Insert into the hash table. If the item is
+     * already present, do nothing.
+     * @param string the string to hash
+     * @param x the item to insert.
+     */
+    public boolean insert(String string , AnyType x )
+    {
+        // Insert x as active
+        int currentPos = findKeyPos( string );
+        if( isActive( currentPos ) )
+            return false;
+
+        array[ currentPos ] = new HashEntry<>( x, true );
+        theSize++;
+
+        // Rehash; see Section 5.5
+        if( ++occupiedCt > array.length / 2 )
+            rehash( );
+
+        return true;
+    }
+
     public String toString (int limit){
         StringBuilder sb = new StringBuilder();
         int ct=0;
@@ -101,6 +124,28 @@ public class QuadraticProbingHashTable<AnyType>
 
         while( array[ currentPos ] != null &&
                 !array[ currentPos ].element.equals( x ) )
+        {
+            currentPos += offset;  // Compute ith probe
+            offset += 2;
+            if( currentPos >= array.length )
+                currentPos -= array.length;
+        }
+
+        return currentPos;
+    }
+
+    /**
+     * Method that performs quadratic probing resolution.
+     * @param word the item to search for.
+     * @return the position where the search terminates.
+     */
+    private int findKeyPos( String word )
+    {
+        int offset = 1;
+        int currentPos = stringToHash( word );
+
+        while( array[ currentPos ] != null &&
+                !array[ currentPos ].element.equals( word ) )
         {
             currentPos += offset;  // Compute ith probe
             offset += 2;
@@ -159,6 +204,17 @@ public class QuadraticProbingHashTable<AnyType>
     }
 
     /**
+     * Find an item in the hash table by hash.
+     * @param string the item to search for.
+     * @return true if item is found
+     */
+    public boolean containsKey( String string )
+    {
+        int currentPos = findKeyPos( string );
+        return isActive( currentPos );
+    }
+
+    /**
      * Find an item in the hash table.
      * @param x the item to search for.
      * @return the matching item.
@@ -166,6 +222,22 @@ public class QuadraticProbingHashTable<AnyType>
     public AnyType find( AnyType x )
     {
         int currentPos = findPos( x );
+        if (!isActive( currentPos )) {
+            return null;
+        }
+        else {
+            return array[currentPos].element;
+        }
+    }
+
+    /**
+     * Find an item in the hash table.
+     * @param string the item to search for.
+     * @return the matching item.
+     */
+    public AnyType findKey( String string )
+    {
+        int currentPos = findKeyPos( string );
         if (!isActive( currentPos )) {
             return null;
         }
@@ -202,6 +274,17 @@ public class QuadraticProbingHashTable<AnyType>
     private int myhash( AnyType x )
     {
         int hashVal = x.hashCode( );
+
+        hashVal %= array.length;
+        if( hashVal < 0 )
+            hashVal += array.length;
+
+        return hashVal;
+    }
+
+    private int stringToHash( String string )
+    {
+        int hashVal = string.hashCode( );
 
         hashVal %= array.length;
         if( hashVal < 0 )
