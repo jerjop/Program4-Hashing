@@ -77,7 +77,7 @@ public class QuadraticProbingHashTable<AnyType>
 
         // Rehash; see Section 5.5
         if( ++occupiedCt > array.length / 2 )
-            rehash( );
+            rehash();
 
         return true;
     }
@@ -143,16 +143,6 @@ public class QuadraticProbingHashTable<AnyType>
     {
         int offset = 1;
         int currentPos = stringToHash( word );
-
-        while( array[ currentPos ] != null &&
-                !array[ currentPos ].element.equals( word ) )
-        {
-            currentPos += offset;  // Compute ith probe
-            offset += 2;
-            if( currentPos >= array.length )
-                currentPos -= array.length;
-        }
-
         return currentPos;
     }
 
@@ -164,6 +154,24 @@ public class QuadraticProbingHashTable<AnyType>
     public boolean remove( AnyType x )
     {
         int currentPos = findPos( x );
+        if( isActive( currentPos ) )
+        {
+            array[ currentPos ].isActive = false;
+            theSize--;
+            return true;
+        }
+        else
+            return false;
+    }
+
+    /**
+     * Remove from the hash table.
+     * @param x the item to remove.
+     * @return true if item removed
+     */
+    public boolean removeByString( String x )
+    {
+        int currentPos = findKeyPos( x );
         if( isActive( currentPos ) )
         {
             array[ currentPos ].isActive = false;
@@ -205,13 +213,14 @@ public class QuadraticProbingHashTable<AnyType>
 
     /**
      * Find an item in the hash table by hash.
-     * @param string the item to search for.
+     * @param x the item to search for.
      * @return true if item is found
      */
-    public boolean containsKey( String string )
+    public boolean containsKey( String x )
     {
-        int currentPos = findKeyPos( string );
-        return isActive( currentPos );
+        int position = stringToHash(x);
+        int currentPos = findKeyPos( x );
+        return isActive( currentPos ) && (position == currentPos);
     }
 
     /**
@@ -235,7 +244,7 @@ public class QuadraticProbingHashTable<AnyType>
      * @param string the item to search for.
      * @return the matching item.
      */
-    public AnyType findKey( String string )
+    public AnyType findByWord( String string )
     {
         int currentPos = findKeyPos( string );
         if (!isActive( currentPos )) {
@@ -244,6 +253,14 @@ public class QuadraticProbingHashTable<AnyType>
         else {
             return array[currentPos].element;
         }
+    }
+
+    public int getPosition( String string ) {
+        return stringToHash(string);
+    }
+
+    public AnyType getObject(int position) {
+        return array[position].element;
     }
 
     /**
@@ -312,7 +329,7 @@ public class QuadraticProbingHashTable<AnyType>
 
     private static final int DEFAULT_TABLE_SIZE = 101;
 
-    private HashEntry<AnyType> [ ] array; // The array of elements
+    public HashEntry<AnyType> [ ] array; // The array of elements
     private int occupiedCt;                 // The number of occupied cells
     private int theSize;                  // Current size
 
@@ -377,11 +394,11 @@ public class QuadraticProbingHashTable<AnyType>
         System.out.println( "Checking... (no more output means success)" );
 
 
-        for( int i = GAP; i != 0; i = ( i + GAP ) % NUMS )
-            H.insert( ""+i );
-        for( int i = GAP; i != 0; i = ( i + GAP ) % NUMS )
-            if( H.insert( ""+i ) )
-                System.out.println( "OOPS!!! " + i );
+//        for( int i = GAP; i != 0; i = ( i + GAP ) % NUMS )
+//            H.insert( ""+i );
+//        for( int i = GAP; i != 0; i = ( i + GAP ) % NUMS )
+//            if( H.insert( ""+i ) )
+//                System.out.println( "OOPS!!! " + i );
         for( int i = 1; i < NUMS; i+= 2 )
             H.remove( ""+i );
 

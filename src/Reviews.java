@@ -55,48 +55,56 @@ public class Reviews {
             }
 
             for (String word : words) {
-                WordInfo info = H.findKey(word);
-                if (info == null) {
-                    H.insert(word.toLowerCase(), new WordInfo(word));
+                if (word.equals(words[0])) {
+                    continue;
+                }
+                word = word.toLowerCase();
+                boolean exists = H.containsKey(word);
+                if (exists) {
+                    WordInfo stored = H.findByWord(word);
+                    stored.update(score);
                 } else {
-                    double occurrences = info.numberOfOccurences;
-                    double reviews = line_count;
-                    double averageUsage = reviews / occurrences;
-                    if (averageUsage > .1) {
-                        H.remove(info);
-                    } else {
-                        info.update(score);
-                    }
+                    WordInfo info = new WordInfo(word);
+                    info.update(score);
+                    H.insert(word, info);
                 }
             }
         }
     }
 
-    public void handleUserReviewInfo() {
-        double sum = 0.0d;
-        double average = 0.0d;
+    public void handleUserReviewInfo() throws IOException {
+        String[] words = null;
+        String line;
 
-        Scanner sc = new Scanner(System.in);
+        BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
         System.out.print("Enter a review: ");
 
-        while (sc.hasNext()) {
-            String input = sc.next().toLowerCase();
-            WordInfo info = new WordInfo(input);
-            WordInfo entry = H.find(info);
-            if (entry != null) {
-                sum += entry.totalScore;
-                average = entry.getAverage();
+        while ((line = input.readLine()) != null) {
+            double sum = 0.0d;
+            int count = 0;
+            double average = 0.0d;
+
+            words = line.split("\\s+");
+            for (String word : words) {
+                count++;
+                word = word.toLowerCase();
+                if (H.containsKey(word)) {
+                    WordInfo entry = H.findByWord(word);
+                    sum += entry.getAverage();
+                }
             }
-        }
 
-        System.out.println("The review has an average value of " + average);
+            average = sum / count;
+            System.out.println("Review: " + line);
+            System.out.println("The review has an average value of " + average);
 
-        if (average < 1.75) {
-            System.out.println("Negative");
-        } else if (average >= 1.75 && average < 2.25) {
-            System.out.println("Neutral");
-        } else {
-            System.out.println("Positive");
+            if (average < 1.75) {
+                System.out.println("Negative\n\n");
+            } else if (average >= 1.75 && average < 2.25) {
+                System.out.println("Neutral\n\n");
+            } else {
+                System.out.println("Positive\n\n");
+            }
         }
     }
 
@@ -162,15 +170,10 @@ public class Reviews {
 
             try {
                 Reviews r1 = new Reviews();
-                r1.learnFromFile("movieReviewsShort.txt");
-
-                System.out.println("done again");
-//                r1.handleUserReviewInfo();
+                r1.learnFromFile("movieReviews.txt");
+                r1.handleUserReviewInfo();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
-
         }
-
     }
